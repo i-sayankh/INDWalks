@@ -1,4 +1,6 @@
 using INDWalks.API.Data;
+using INDWalks.API.Mappings;
+using INDWalks.API.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,6 +15,8 @@ builder.Services.AddDbContext<INDWalksDbContext>(options =>
 {
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnectionString"));
 });
+builder.Services.AddScoped<IRegionRepository, SQLRegionRepository>();
+builder.Services.AddAutoMapper(typeof(AutoMapperProfiles));
 
 var app = builder.Build();
 

@@ -1,7 +1,8 @@
-﻿using INDWalks.API.Data;
+﻿using AutoMapper;
+using INDWalks.API.Data;
 using INDWalks.API.Models.Domain;
 using INDWalks.API.Models.DTOs;
-using Microsoft.AspNetCore.Http;
+using INDWalks.API.Repositories;
 using Microsoft.AspNetCore.Mvc;
 
 namespace INDWalks.API.Controllers
@@ -10,46 +11,35 @@ namespace INDWalks.API.Controllers
     [ApiController]
     public class RegionController : ControllerBase
     {
-        private readonly INDWalksDbContext context;
+        private readonly IRegionRepository regionRepository;
+        private readonly IMapper mapper;
 
-        public RegionController(INDWalksDbContext context)
+        public RegionController(INDWalksDbContext context, IRegionRepository regionRepository, IMapper mapper)
         {
-            this.context = context;
+            this.regionRepository = regionRepository;
+            this.mapper = mapper;
         }
 
         // GET ALL REGIONS
         // GET: https://localhost:portnumber/api/region
         [HttpGet]
-        public IActionResult GetAll()
+        public async Task<IActionResult> GetAll()
         {
             // Get Data from DB - Domain Models
-            var regions = context.Regions.ToList();
-
-            // Map Domain Models to DTOs
-            var regionsDTO = new List<RegionDTO>();
-            foreach(var region in regions)
-            {
-                regionsDTO.Add(new RegionDTO()
-                {
-                    Id = region.Id,
-                    Code= region.Code,
-                    Name= region.Name,
-                    RegionImageUrl= region.RegionImageUrl
-                });
-            }
+            var regions = await regionRepository.GetAllAsync();
 
             // Return DTOs
-            return Ok(regionsDTO);
+            return Ok(mapper.Map<List<RegionDTO>>(regions));
         }
 
         // GET REGION BY ID
         // GET: https://localhost:portnumber/api/region/{id}
         [HttpGet]
         [Route("{id:Guid}")]
-        public IActionResult GetById(Guid id)
+        public async Task<IActionResult> GetById(Guid id)
         {
             // Get Region Domain Model from DB
-            var region = context.Regions.Find(id);
+            var region = await regionRepository.GetByIdAsync(id);
 
             if(region == null)
             {
@@ -73,28 +63,16 @@ namespace INDWalks.API.Controllers
         // POST: https://localhost:portnumber/api/region
 
         [HttpPost]
-        public IActionResult Create([FromBody] AddRegionRequestDTO addRegionRequestDTO)
+        public async Task<IActionResult> Create([FromBody] AddRegionRequestDTO addRegionRequestDTO)
         {
             // Map DTO to Domain Model
-            var region = new Region
-            {
-                Code= addRegionRequestDTO.Code,
-                Name= addRegionRequestDTO.Name,
-                RegionImageUrl= addRegionRequestDTO.RegionImageUrl
-            };
+            var region = mapper.Map<Region>(addRegionRequestDTO);
 
             // Use Domain Model to Create Region
-            context.Regions.Add(region);
-            context.SaveChanges();
+           await regionRepository.CreateAsync(region);
 
             // map domain model back to DTO
-            var regionDTO = new RegionDTO
-            {
-                Id = region.Id,
-                Code = region.Code,
-                Name = region.Name,
-                RegionImageUrl= region.RegionImageUrl
-            };
+            var regionDTO = mapper.Map<RegionDTO>(region);
 
             return CreatedAtAction(nameof(GetById), new {id = regionDTO.Id}, regionDTO);
         }
@@ -103,31 +81,17 @@ namespace INDWalks.API.Controllers
         // PUT: https://localhost:portnumber/api/region/{id}
         [HttpPut]
         [Route("{id:Guid}")]
-        public IActionResult Update([FromRoute] Guid id, [FromBody] UpdateRegionRequestDTO updateRegionRequestDTO)
+        public async Task<IActionResult> Update([FromRoute] Guid id, [FromBody] UpdateRegionRequestDTO updateRegionRequestDTO)
         {
-            // Check if Region Exists
-            var region = context.Regions.FirstOrDefault(x => x.Id == id);
-
-            if (region == null)
-            {
-                return NotFound();
-            }
-
             // Map DTO to Domain Model
-            region.Code = updateRegionRequestDTO.Code;
-            region.Name = updateRegionRequestDTO.Name;
-            region.RegionImageUrl= updateRegionRequestDTO.RegionImageUrl;
+            var region = mapper.Map<Region>(updateRegionRequestDTO);
 
-            context.SaveChanges();
+            // Check if Region exists
+            region = await regionRepository.UpdateAsync(id, region);
+            if(region == null) return NotFound();
 
             // Convert Domain Model to DTO
-            var regionDTO = new RegionDTO
-            {
-                Id = region.Id,
-                Code = region.Code,
-                Name = region.Name,
-                RegionImageUrl= region.RegionImageUrl
-            };
+            var regionDTO = mapper.Map<RegionDTO>(region);
 
             return Ok(regionDTO);
         }
@@ -136,20 +100,26 @@ namespace INDWalks.API.Controllers
         // DELETE: https://localhost:portnumber/api/region/{id}
         [HttpDelete]
         [Route("{id:Guid}")]
-        public IActionResult Delete([FromRoute] Guid id)
+        public async  Task<IActionResult> Delete([FromRoute] Guid id)
         {
-            var region = context.Regions.FirstOrDefault(x => x.Id == id);
+            var region = await regionRepository.DeleteAsync(id);
 
             if(region== null)
             {
                 return NotFound();
             }
 
-            // Delete Region
-            context.Regions.Remove(region);
-            context.SaveChanges();
+            // Return deleted Region back
+            // map Domain model to DTO
+            var regionDTO = new RegionDTO
+            {
+                Id = region.Id,
+                Code = region.Code,
+                Name = region.Name,
+                RegionImageUrl = region.RegionImageUrl
+            };
 
-            return Ok();
+            return Ok(regionDTO);
         }
     }
 }
