@@ -1,6 +1,7 @@
 ﻿using INDWalks.API.Data;
 using INDWalks.API.Models.Domain;
 using Microsoft.EntityFrameworkCore;
+using System.Linq;
 
 namespace INDWalks.API.Repositories
 {
@@ -12,9 +13,22 @@ namespace INDWalks.API.Repositories
         {
             this.context = context;
         }
-        public async Task<List<Walks>> GetAllAsync()
+        public async Task<List<Walks>> GetAllAsync(string? filterOn = null, string? filterQuery = null)
         {
-            return await context.Walks.Include("Difficulty").Include("Region").ToListAsync();
+            var walks = context.Walks.Include("Difficulty").Include("Region").AsQueryable();
+
+            // Filter
+            if(!string.IsNullOrWhiteSpace(filterOn) && !string.IsNullOrWhiteSpace(filterQuery))
+            {
+                if(filterOn.Equals("Name", StringComparison.OrdinalIgnoreCase))
+                {
+                    walks = walks.Where(x => x.Name.Contains(filterQuery));
+                }                
+            }
+
+            return await walks.ToListAsync();
+
+            //return await context.Walks.Include("Difficulty").Include("Region").ToListAsync();
         }
         public async Task<Walks?> GetByIdAsync(Guid id)
         {
@@ -47,7 +61,7 @@ namespace INDWalks.API.Repositories
         public async Task<Walks?> DeleteAsync(Guid id)
         {
             var existingWalk = await context.Walks.FirstOrDefaultAsync(x => x.Id == id);
-            if(existingWalk == null) return null;
+            if (existingWalk == null) return null;
 
             context.Remove(existingWalk);
             await context.SaveChangesAsync();
