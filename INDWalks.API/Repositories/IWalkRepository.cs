@@ -1,10 +1,12 @@
 ﻿using INDWalks.API.Models.Domain;
+using Microsoft.AspNetCore.Mvc;
 
 namespace INDWalks.API.Repositories
 {
     public interface IWalkRepository
     {
-        Task<List<Walks>> GetAllAsync(string? filterOn = null, string? filterQuery = null);
+        Task<List<Walks>> GetAllAsync(string? filterOn = null, string? filterQuery = null, 
+            [FromQuery] string? sortBy = null, [FromQuery] bool isAscending = true);
         Task<Walks> CreateAsync(Walks walks);
         Task<Walks?> GetByIdAsync(Guid id);
         Task<Walks?> UpdateAsync(Guid id, Walks walks);

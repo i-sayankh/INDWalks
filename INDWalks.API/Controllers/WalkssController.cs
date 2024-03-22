@@ -21,11 +21,12 @@ namespace INDWalks.API.Controllers
             this.walkRepository = walkRepository;
         }
         // Get Walks
-        // GET: /api/walkss?filterOn=Name&filterQuery=Track
+        // GET: /api/walkss?filterOn=Name&filterQuery=Track&sortBy=Name&isAscending=true
         [HttpGet]
-        public async Task<IActionResult> GetAll([FromQuery] string? filterOn, [FromQuery] string? filterQuery)
+        public async Task<IActionResult> GetAll([FromQuery] string? filterOn, [FromQuery] string? filterQuery, 
+            [FromQuery] string? sortBy, [FromQuery] bool? isAscending)
         {
-            var walks = await walkRepository.GetAllAsync(filterOn, filterQuery);
+            var walks = await walkRepository.GetAllAsync(filterOn, filterQuery, sortBy, isAscending ?? true);
             return Ok(mapper.Map<List<WalkDTO>>(walks));
         }
 

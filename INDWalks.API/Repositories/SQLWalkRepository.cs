@@ -1,5 +1,6 @@
 ﻿using INDWalks.API.Data;
 using INDWalks.API.Models.Domain;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
 
@@ -13,7 +14,8 @@ namespace INDWalks.API.Repositories
         {
             this.context = context;
         }
-        public async Task<List<Walks>> GetAllAsync(string? filterOn = null, string? filterQuery = null)
+        public async Task<List<Walks>> GetAllAsync(string? filterOn = null, string? filterQuery = null,
+            [FromQuery] string? sortBy = null, [FromQuery] bool isAscending = true)
         {
             var walks = context.Walks.Include("Difficulty").Include("Region").AsQueryable();
 
@@ -24,6 +26,19 @@ namespace INDWalks.API.Repositories
                 {
                     walks = walks.Where(x => x.Name.Contains(filterQuery));
                 }                
+            }
+
+            // Sorting
+            if(!string.IsNullOrWhiteSpace(sortBy))
+            {
+                if(sortBy.Equals("Name", StringComparison.OrdinalIgnoreCase))
+                {
+                    walks = isAscending ? walks.OrderBy(x => x.Name) : walks.OrderByDescending(x => x.Name);
+                }
+                else if (sortBy.Equals("LengthInKm", StringComparison.OrdinalIgnoreCase))
+                {
+                    walks = isAscending ? walks.OrderBy(x => x.LengthInKm) : walks.OrderByDescending(x => x.LengthInKm);
+                }
             }
 
             return await walks.ToListAsync();
