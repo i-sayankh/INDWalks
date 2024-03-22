@@ -6,7 +6,7 @@ namespace INDWalks.API.Repositories
     public interface IWalkRepository
     {
         Task<List<Walks>> GetAllAsync(string? filterOn = null, string? filterQuery = null, 
-            [FromQuery] string? sortBy = null, [FromQuery] bool isAscending = true);
+            string? sortBy = null, bool isAscending = true, int pageNumber = 1, int pageSize = 1);
         Task<Walks> CreateAsync(Walks walks);
         Task<Walks?> GetByIdAsync(Guid id);
         Task<Walks?> UpdateAsync(Guid id, Walks walks);

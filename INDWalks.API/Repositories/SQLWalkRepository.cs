@@ -15,7 +15,8 @@ namespace INDWalks.API.Repositories
             this.context = context;
         }
         public async Task<List<Walks>> GetAllAsync(string? filterOn = null, string? filterQuery = null,
-            [FromQuery] string? sortBy = null, [FromQuery] bool isAscending = true)
+            [FromQuery] string? sortBy = null, [FromQuery] bool isAscending = true,
+            int pageNumber = 1, int pageSize = 1)
         {
             var walks = context.Walks.Include("Difficulty").Include("Region").AsQueryable();
 
@@ -41,7 +42,10 @@ namespace INDWalks.API.Repositories
                 }
             }
 
-            return await walks.ToListAsync();
+            // Pagination
+            var skipResults = (pageNumber - 1) * pageSize;
+
+            return await walks.Skip(skipResults).Take(pageSize).ToListAsync();
 
             //return await context.Walks.Include("Difficulty").Include("Region").ToListAsync();
         }
