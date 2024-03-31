@@ -15,6 +15,7 @@ namespace INDWalks.API.Mappings
             CreateMap<Walks, WalkDTO>().ReverseMap();
             CreateMap<Walks, UpdateWalkRequestDTO>().ReverseMap();
             CreateMap<Difficulty, DifficultyDTO>().ReverseMap();
+            CreateMap<Image, ImageUploadRequestDTO>().ReverseMap();
         }
     }
 }
