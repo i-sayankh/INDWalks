@@ -8,10 +8,21 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.OpenApi.Models;
 using Microsoft.Extensions.FileProviders;
+using Serilog;
+using INDWalks.API.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+
+var logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .WriteTo.File("Logs/INDWalks_Log.txt", rollingInterval: RollingInterval.Day)
+    .MinimumLevel.Warning()
+    .CreateLogger();
+builder.Logging.ClearProviders();
+builder.Logging.AddSerilog(logger);
+
 builder.Services.AddControllers();
 builder.Services.AddHttpContextAccessor();
 
@@ -101,6 +112,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseMiddleware<ExceptionHandlerMiddleware>();
 
 app.UseHttpsRedirection();
 

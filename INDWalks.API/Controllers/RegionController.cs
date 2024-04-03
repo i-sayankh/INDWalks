@@ -6,6 +6,7 @@ using INDWalks.API.Models.DTOs;
 using INDWalks.API.Repositories;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Text.Json;
 
 namespace INDWalks.API.Controllers
 {
@@ -15,23 +16,28 @@ namespace INDWalks.API.Controllers
     {
         private readonly IRegionRepository regionRepository;
         private readonly IMapper mapper;
+        private readonly ILogger<RegionController> logger;
 
-        public RegionController(INDWalksDbContext context, IRegionRepository regionRepository, IMapper mapper)
-        {
+        public RegionController(IRegionRepository regionRepository, 
+            IMapper mapper, ILogger<RegionController> logger)
+        { 
             this.regionRepository = regionRepository;
             this.mapper = mapper;
+            this.logger = logger;
         }
 
         // GET ALL REGIONS
         // GET: https://localhost:portnumber/api/region
         [HttpGet]
-        [Authorize(Roles = "Reader")]
+        //[Authorize(Roles = "Reader")]
         public async Task<IActionResult> GetAll()
         {
+            logger.LogInformation("GetAllRegions Invoked...");
             // Get Data from DB - Domain Models
             var regions = await regionRepository.GetAllAsync();
 
             // Return DTOs
+            logger.LogInformation($" Finished -> {JsonSerializer.Serialize(regions)}");
             return Ok(mapper.Map<List<RegionDTO>>(regions));
         }
 
